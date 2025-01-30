@@ -99,20 +99,22 @@
 
 			</nav>
 		</header>
+
+		<section class="main">
+			<div class="page-header" markdown="1">
+				<article class="content">
+					{{ content }}
+				</article>
+			</div>
+		</section>
+		<footer>
+			<div class="impressum-mail"> gyroidos@aisec.fraunhofer.de </div>
+		</footer>
+
+		<script>
+			document.getElementById("open-nav").addEventListener("click", function () {
+				document.body.classList.toggle("nav-open");
+			});
+		</script>
 	</body>
-    <section class="main">
-        <div class="page-header" markdown="1">
-			<article class="content">
-				{{ content }}
-			</article>
-		</div>
-    </section>
-    <footer>
-	    <div class="impressum-mail"> gyroidos@aisec.fraunhofer.de </div>
-    </footer>
-    <script>
-        document.getElementById("open-nav").addEventListener("click", function () {
-            document.body.classList.toggle("nav-open");
-        });
-    </script>
 </html>

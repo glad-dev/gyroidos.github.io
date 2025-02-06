@@ -24,7 +24,7 @@ apt-get install git build-essential unzip re2c pkg-config check \
 ### Protobuf-c-text
 To install protobuf-c-text, run the following commands:
 ```
-git clone https://github.com/gyrdoidos/external_protobuf-c-text
+git clone https://github.com/gyroidos/external_protobuf-c-text
 cd external_protobuf-c-text/
 ./autogen.sh
 ./configure --enable-static=yes

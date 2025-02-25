@@ -61,6 +61,18 @@ sudo make install
 5. Install root certificate: `sudo cp ~/test-certs/ssig_rootca.cert /var/lib/cml/tokens/`
 6. Start `cmld.service` with `sudo systemctl start cmld.service`
 
+## Add a Guest OS
+1. Create and enter a new folder, e.g. `~/cmld_guestos`
+2. Initalize a guest os called `guest-bookworm` with `cml_build_guestos init guest-bookworm --pki ~/deps/gyroidos_build/test-certs/`
+3. Create a new folder `rootfs-builder`
+4. Create a new rootfs for Debian 12 Bookworm `sudo debootstrap --arch=amd64 bookworm rootfs-builder http://deb.debian.org/debian/`
+5. Create an uncompressed tarball with `sudo tar -cf guest-bookworm.tar -C ./rootfs-builder .`
+6. Move the tarball into `cmld_guestos/rootfs` with `mv guest-bookworm.tar  rootfs/guest-bookworm`
+7. Build the guest os with `sudo cml_build_guestos build guest-bookworm`
+8. I don't know `sudo cp -r out/trustx-guests/<guestos-name>os* /var/lib/cml/operatingsystems`
+9. Restart `cmld` service
+10. (Optional) Remove with `rootfs-builder`directory with `sudo rm -r rootfs-builder`
+
 3. You can either push your own certificate by using cml-control push_ca or copy the ssig_rootca.cert from your build to /var/lib/cml/tokens
 4. Run scd again, this time it will start a loop and keep running
 5. Run cmld and keep it running

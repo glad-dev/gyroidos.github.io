@@ -19,7 +19,7 @@ Install all required packages with the following command:
 ```
 apt-get install git build-essential unzip re2c pkg-config check \
     lxcfs libprotobuf-c-dev automake libtool libselinux1-dev \
-    libcap-dev protobuf-c-compiler libssl-dev udhcpd udhcpd
+    libcap-dev protobuf-c-compiler libssl-dev udhcpd udhcpd libsystemd-dev
 ```
 ### Protobuf-c-text
 To install protobuf-c-text, run the following commands:
@@ -38,8 +38,8 @@ Clone, compile and install the neccesary components with
 ```
 git clone https://github.com/gyroidos/cml
 cd cml/
-make -f Makefile_lsb 
-sudo make -f Makefile_lsb install
+SYSTEMD=y make -f Makefile_lsb 
+sudo SYSTEMD=y make -f Makefile_lsb install
 ```
 
 

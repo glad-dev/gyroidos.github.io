@@ -34,6 +34,8 @@ ldconfig
 ```
 
 ## Installation
+
+### CML
 Clone, compile and install the neccesary components with
 ```
 git clone https://github.com/gyroidos/cml
@@ -42,6 +44,13 @@ SYSTEMD=y make -f Makefile_lsb
 sudo SYSTEMD=y make -f Makefile_lsb install
 ```
 
+### Additional tools
+Clone and install the necessary components with
+```
+git clone https://github.com/gyroidos/gyroidos_build
+cd gyroidos_build/cml-tools
+sudo make install
+```
 
 ## Setup
 1. Run `cml-scd` once to initalize `/var/lib/cml/tokens`: `sudo cml-scd`

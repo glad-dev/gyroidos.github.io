@@ -44,7 +44,10 @@ sudo SYSTEMD=y make -f Makefile_lsb install
 
 
 ## Setup
-1. Run scd once to initialize /var/lib/cml/tokens 
+1. Run `cml-scd` once to initalize `/var/lib/cml/tokens`: `sudo cml-scd`
+2. Create `cml-control` group: `sudo addgroup cml-control`
+3. Add current user to the group: `sudo usermod -aG cml-control $(whoami)`
+4. Start `cml-scd.service` with `sudo systemctl start cml-scd.service`
 3. You can either push your own certificate by using cml-control push_ca or copy the ssig_rootca.cert from your build to /var/lib/cml/tokens
 4. Run scd again, this time it will start a loop and keep running
 5. Run cmld and keep it running

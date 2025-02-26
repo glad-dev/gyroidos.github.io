@@ -55,9 +55,10 @@ sudo make install
 
 ## Setup
 
-1. Run `cml-scd` once to create the certificates in `/var/lib/cml/tokens`
-2. Create `cml-control` group and add the current user to it
-3. Create test certificates with `cml_gen_dev_certs /path/to/dir`. Note that the `/path/to/dir` directory should not exist.
+1. Create missing directories - TODO
+2. Run `cml-scd` once to create the certificates in `/var/lib/cml/tokens`
+3. Create `cml-control` group and add the current user to it
+4. Create test certificates with `cml_gen_dev_certs /path/to/dir`. Note that the `/path/to/dir` directory should not exist.
 5. Copy the `/path/to/dir/ssig_rootca.cert` to `/var/lib/cml/tokens/`
 6. Start the `cmld.service`
 

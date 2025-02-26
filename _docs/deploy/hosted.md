@@ -49,7 +49,7 @@ sudo SYSTEMD=y make -f Makefile_lsb install
 Clone and install the necessary components with
 ```
 git clone https://github.com/gyroidos/gyroidos_build
-cd gyroidos_build/cml-tools
+cd gyroidos_build/cml_tools
 sudo make install
 ```
 

@@ -17,7 +17,7 @@ Have a prebuilt container image ready or build one yourself as described in [Bui
 ### Required packages
 Install all required packages with the following command: 
 ```
-sudo apt update && sudo apt-get install git build-essential unzip re2c pkg-config \
+sudo apt update && sudo apt-get install -y git build-essential unzip re2c pkg-config \
     check lxcfs libprotobuf-c-dev automake libtool libselinux1-dev libcap-dev \
     protobuf-c-compiler libssl-dev udhcpd udhcpd libsystemd-dev debootstrap \
     python3-protobuf

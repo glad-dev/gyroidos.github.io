@@ -30,8 +30,8 @@ cd external_protobuf-c-text/
 ./autogen.sh
 ./configure --enable-static=yes
 make 
-make install
-ldconfig
+sudo make install
+sudo ldconfig
 ```
 
 ## Installation

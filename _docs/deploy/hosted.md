@@ -54,12 +54,60 @@ sudo make install
 ```
 
 ## Setup
-1. Run `cml-scd` once to initalize `/var/lib/cml/tokens`: `sudo cml-scd`
-2. Create `cml-control` group: `sudo addgroup cml-control`
-3. Add current user to the group: `sudo usermod -aG cml-control $(whoami)`
-4. Create test certificates with `cml_gen_dev_certs ~/test-certs`. Note that the `test-certs` directory should not exist.
-5. Install root certificate: `sudo cp ~/test-certs/ssig_rootca.cert /var/lib/cml/tokens/`
-6. Start `cmld.service` with `sudo systemctl start cmld.service`
+
+1. Run `cml-scd` once to create the certificates in `/var/lib/cml/tokens`
+2. Create `cml-control` group and add the current user to it
+3. Create test certificates with `cml_gen_dev_certs /path/to/dir`. Note that the `/path/to/dir` directory should not exist.
+5. Copy the `/path/to/dir/ssig_rootca.cert` to `/var/lib/cml/tokens/`
+6. Start the `cmld.service`
+
+<details markdown="0">
+<summary style="display: list-item">Setup script</summary>
+
+<pre>
+#!/bin/bash
+
+set -euo pipefail
+
+echo "Initalizing tokens"
+sudo cml-scd
+
+# Check if cml-control group already exists
+GROUP_NAME="cml-control"
+if $(groups | grep -q "$GROUP_NAME"); then
+    echo "Group '$GROUP_NAME' already exists"
+else
+    echo "Creating cml-control group"
+    sudo addgroup cml-control
+fi
+
+echo "Adding current user to group"
+sudo usermod -aG cml-control $(whoami)
+echo "Reloading groups"
+newgrp "$GROUP_NAME"
+
+# Calling `cml_gen_dev_certs` on an existing directory does not create any certificates
+if [ -d ~/test-certs ]; then
+    echo "Remove the directory at '~/test-certs' and re-run the script"
+    exit 1
+fi
+
+echo
+echo "Creating root certificates"
+cml_gen_dev_certs ~/test-certs
+
+echo
+echo "Installing root certificates"
+sudo cp ~/test-certs/ssig_rootca.cert /var/lib/cml/tokens/
+
+echo
+echo "Starting cmld.service"
+sudo systemctl start cmld.service
+
+echo
+echo "Use 'systemctl status cmld.service' to verify that the service is active."
+</pre>
+</details>
 
 ## Add a Guest OS
 1. Create and enter a new folder, e.g. `~/cmld_guestos`

@@ -74,28 +74,32 @@ Download and run the [setup script](/assets/hosted-setup.sh) to automatically pe
 6. Start the `cmld` systemd service
 
 
-## Add a Guest OS
+## Guest OS Setup
 
 ### Automatic
 
-Download and run the [guest setup script](/assets/hosted-debian-guest.sh), which will create and start a debian 12 container.
+Download and run the [guest setup script](/assets/hosted-debian-guest.sh), which automatically creates and starts a Debian 12 container.
 
-### Manually
+### Manual
 
-1. Create a new folder for the guest os
-2. Initalize it with `cml_build_guestos init $GUEST_NAME --pki /path/to/cml/certs`
-3. Create a new rootfs, e.g. using `debootstrap`
-4. Add it to an uncompressed tarball called `${GUEST_NAME}os.tar`
-5. Move it the `rootfs/` directory created in step 2
-6. Build the guest os with `cml_build_guestos build $GUEST_NAME`
-7. Add the guest os to cml by copying the content of `out/` to `/var/lib/cml/operatingsystems`
+1. Create a folder for the Guest OS
+2. Initialize the folder and generate a basic configuration with `cml_build_guestos init $GUEST_NAME --pki /path/to/cml/certs`
+3. Create a new rootfs using, e.g. `debootstrap`
+4. Add the rootfs to an uncompressed tarball named `${GUEST_NAME}os.tar`
+5. Move the tar ball into the `rootfs/` directory that was created in step 2
+6. Build the Guest OS with `cml_build_guestos build $GUEST_NAME`
+7. Add the built Guest OS to CML by copying the contents of the generated `out/` directory to `/var/lib/cml/operatingsystems`
 8. For this example, append `signed_configs: false` to `/etc/cml/device.conf`
 9. Restart the `cmld` service
-10. Verify that the guestos was detected by running `cml-control list_guestos`, which should contains the new guest os
-11. Create the GyroidOS container with `cml-control create conf/${GUEST_NAME}container.conf`
-12. Change the container's password with `cml-control change_pin "$GUEST_NAME"`. Default password is "trustme"
-13. Start the container with `cml-control start "$GUEST_NAME"`. If command returns `CONTAINER_START_EINTERNAL`, run it again.
-14. Verify that it is running with `cml-control list "$GUEST_NAME"`, which should have `state: RUNNING`
-15. To connect to the container, run `ps auxf`, search for `/user/sbin/cmld`. It should have a child process running `/sbin/init`. Get the PID and connect with `sudo nsenter -at $PID`
+10. Confirm that the new Guest OS is detected by running: `cml-control list_guestos`
+11. Create a GyroidOS container using its configuration file with `cml-control create conf/${GUEST_NAME}container.conf`
+12. Update the container’s password (default is `"trustme"`) with `cml-control change_pin "$GUEST_NAME"`
+13. Start the container with: `cml-control start "$GUEST_NAME"`. If the command returns `CONTAINER_START_EINTERNAL`, re-run the command.
+14. Verify that the container is running by executing: `cml-control list "$GUEST_NAME"`
+15. To access the container’s:
+    - Run `ps auxf` and locate the `/usr/sbin/cmld` process.
+    - Find its child process running `/sbin/init`.
+    - Note the PID of the process.
+    - Connect to the container using `sudo nsenter -at $PID`
 
-For more details, see the [GuestOS configuration](/operate/guestos_config) and the [Basic Operation](/operate/control) documentation pages.
+For additional details, see the [GuestOS configuration](/operate/guestos_config) and [Basic Operation](/operate/control) documentation pages.

@@ -22,8 +22,10 @@ Install all required packages with the following command:
 sudo apt update && sudo apt-get install -y git build-essential unzip re2c pkg-config \
     check lxcfs libprotobuf-c-dev automake libtool libselinux1-dev libcap-dev \
     protobuf-c-compiler libssl-dev udhcpd udhcpd libsystemd-dev debootstrap \
-    python3-protobuf
+    squashfs-tools python3-protobuf protobuf-compiler \
+    cryptsetup-bin iptables
 ```
+
 ### Protobuf-c-text
 To install protobuf-c-text, run the following commands:
 ```

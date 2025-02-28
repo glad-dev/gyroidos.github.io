@@ -17,7 +17,7 @@ These instructions have been tested and work on Debian 13 Trixi.
 Have a prebuilt container image ready or build one yourself as described in [Build](/build/build).
 
 ### Required packages
-Install all required packages with the following command: 
+Install all required packages with the following command:
 ```
 sudo apt update && sudo apt-get install -y git build-essential unzip re2c pkg-config \
     check lxcfs libprotobuf-c-dev automake libtool libselinux1-dev libcap-dev \
@@ -33,7 +33,7 @@ git clone https://github.com/gyroidos/external_protobuf-c-text.git
 cd external_protobuf-c-text/
 ./autogen.sh
 ./configure --enable-static=yes
-make 
+make
 sudo make install
 sudo ldconfig
 ```

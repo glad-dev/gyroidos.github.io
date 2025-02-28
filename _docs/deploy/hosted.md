@@ -66,7 +66,7 @@ Download and run the [setup script](/assets/hosted-setup.sh) to automatically pe
 
 ### Manually
 
-1. Create the log directory `/var/log/cml/cml-scd`
+1. Create the log directory `/var/log/cml/`
 2. Run `sudo cml-scd` once to create certificates
 3. Create the `cml-control` group and add the current user to it
 4. Create test certificates with `cml_gen_dev_certs /path/to/dir`. Note that the `/path/to/dir` directory should not exist.

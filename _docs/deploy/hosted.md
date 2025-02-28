@@ -60,6 +60,12 @@ sudo make install
 
 ## Setup
 
+### Automatic
+
+Download and run the [setup script](/assets/hosted-setup.sh) to automatically perform the steps outlined below.
+
+### Manually
+
 1. Create the log directory `/var/log/cml/cml-scd`
 2. Run `sudo cml-scd` once to create certificates
 3. Create the `cml-control` group and add the current user to it
@@ -67,74 +73,11 @@ sudo make install
 5. Copy the `/path/to/dir/ssig_rootca.cert` to `/var/lib/cml/tokens/`
 6. Start the `cmld` systemd service
 
-<details markdown="0">
-<summary style="display: list-item">Setup script</summary>
-
-<pre>
-#!/bin/bash
-
-set -euo pipefail
-
-echo "Creating log directory"
-sudo mkdir -p /var/log/cml/cml-scd
-
-if [ -d "/var/lib/cml/tokens/" ] && [ ! -z "$(ls -A '/var/lib/cml/tokens/')" ]; then
-    echo "Using existing tokens"
-else
-    echo "Initalizing tokens"
-    sudo cml-scd
-fi
-
-# Check if cml-control group already exists
-GROUP_NAME="cml-control"
-if $(groups | grep -q "$GROUP_NAME"); then
-    echo "Group '$GROUP_NAME' already exists"
-else
-    echo "Creating cml-control group"
-    sudo addgroup cml-control
-fi
-
-if $(id | grep -q "$GROUP_NAME"); then
-    echo "User is already in the '$GROUP_NAME' group"
-else
-    echo "Adding current user to group"
-    sudo usermod -aG cml-control $(whoami)
-    echo "Reloading groups"
-    (newgrp "$GROUP_NAME")
-fi
-
-# Calling `cml_gen_dev_certs` on an existing directory does not create any certificates
-if [ -d ~/test-certs ]; then
-    echo "Remove the directory at '~/test-certs' and re-run the script"
-    exit 1
-fi
-
-echo
-echo "Creating root certificates"
-cml_gen_dev_certs ~/test-certs
-
-echo
-echo "Installing root certificates"
-sudo cp ~/test-certs/ssig_rootca.cert /var/lib/cml/tokens/
-
-echo
-echo "Starting cmld.service"
-sudo systemctl start cmld.service
-
-echo
-echo "Waiting for the service to start"
-sleep 2
-if $(systemctl is-active --quiet cmld.service); then
-    echo "Starting the service was successful."
-    echo "You're good to go"
-else
-    echo "Starting the service failed"
-    echo "Run 'systemctl status cmld.service' for more information"
-fi
-</pre>
-</details>
 
 ## Add a Guest OS
+
+### Manually
+
 1. Create and enter a new folder, e.g. `~/cmld_guestos`
 2. Initalize a guest os called `guest-bookworm` with `cml_build_guestos init guest-bookworm --pki ~/test-certs/`
 3. Create a new folder `rootfs-builder`
@@ -150,13 +93,110 @@ fi
 13. Change container password `cml-control change_pin "guest-bookwormcontainer"`. Default password is "trustme"
 14. Restart `cmld` service
 15. Start the container with `cml-control start "guest-bookwormcontainer"`. If command returns `CONTAINER_START_EINTERNAL`, run it again.
-16. Verify that it is running with `cml-control list "guest-bookwormcontainer"`
+16. Verify that it is running with `    `
 17. In `ps auxf`, look for `/sbin/init` with weird owner
 18. Connect to it using `sudo nsenter -at $PID`
 
-3. You can either push your own certificate by using cml-control push_ca or copy the ssig_rootca.cert from your build to /var/lib/cml/tokens
-4. Run scd again, this time it will start a loop and keep running
-5. Run cmld and keep it running
+<details markdown="0">
+<summary style="display: list-item">GuestOS script</summary>
+
+<pre>
+#!/bin/bash
+
+set -euo pipefail
+
+if [ ! -d ~/test-certs/ ]; then
+    echo "Certificate directory '~/test-certs/' is missing"
+    exit 1
+fi
+
+echo "Creating GuestOS directory"
+mkdir ~/cmld_guestos
+cd ~/cmld_guestos
+
+echo
+echo "Initalizing guest os"
+cml_build_guestos init guest-bookworm --pki ~/test-certs/
+
+echo
+echo "Creating debian 12 rootfs"
+mkdir rootfs-builder
+sudo debootstrap bookworm rootfs-builder http://deb.debian.org/debian/
+
+echo
+echo "Creating tar archive of rootfs"
+sudo tar -cf guest-bookworm.tar -C ./rootfs-builder .
+mv guest-bookworm.tar  rootfs/guest-bookwormos.tar
+
+echo
+echo "Building the guestos"
+sudo cml_build_guestos build guest-bookworm
+
+echo
+echo "Moving guest OS to '/var/lib/cml/operatingsystems'"
+sudo cp -r out/gyroidos-guests/* /var/lib/cml/operatingsystems
+
+echo
+echo "Disabling signed configs for this example"
+echo "signed_configs: false" >> /etc/cml/device.conf
+
+echo
+echo "Restarting cmld service"
+sudo systemctl stop cmld.service
+sudo systemctl start cmld.service
+echo "Verifying that restart was successful"
+systemctl is-active --quiet cmld.service
+
+echo
+echo "Verifying that the guest os was successfully registred"
+cml-control list_guestos | grep -q "guest-bookworm"
+
+echo
+echo "Creating GyroidOS container"
+cml-control create conf/guest-bookwormcontainer.conf
+
+echo
+echo "Updating container password to be empty"
+printf "trustme\n\n\n" | cml-control change_pin "guest-bookwormcontainer"
+
+echo
+echo "Starting the container"
+while true
+do
+    if $(printf "\n" | cml-control start "guest-bookwormcontainer" | grep -q "CONTAINER_START_OK"); then
+        echo "Container started successfully"
+        break
+    fi
+    
+    echo "Container did not start successfully. Waiting for 2 seconds before retrying"
+    sleep 2
+done
+
+echo
+echo "Waiting for the container to be ready"
+while true
+do
+    if $(cml-control list "guest-bookwormcontainer" | grep -q "state: RUNNING"); then
+        echo "Container is running"
+        break
+    else if $(cml-control list "guest-bookwormcontainer" | grep -q "state: STOPPED"); then
+        echo "Container has stopped. Some error has occurred."
+        exit 1
+    fi
+    
+    echo "Container is not yet running. Waiting for 2 seconds before retrying"
+    sleep 2
+done
+
+echo
+echo "Determening container's PID"
+CONTAINER_PID=$(ps auxf | grep -A 10 "[/]usr/sbin/cmld" | grep /sbin/init | awk '{print $2}')
+
+echo "To connect to the container run:"
+echo "sudo nsenter -at $CONTAINER_PID"
+</pre>
+</details>
+
+## Old
 2. Install your guestos as described in [GuestOS configuration](/operate/guestos_config)
 6. You can now use control as described in [Basic Operation](/operate/control)
-

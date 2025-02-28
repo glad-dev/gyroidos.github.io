@@ -76,127 +76,26 @@ Download and run the [setup script](/assets/hosted-setup.sh) to automatically pe
 
 ## Add a Guest OS
 
+### Automatic
+
+Download and run the [guest setup script](/assets/hosted-debian-guest.sh), which will create and start a debian 12 container.
+
 ### Manually
 
-1. Create and enter a new folder, e.g. `~/cmld_guestos`
-2. Initalize a guest os called `guest-bookworm` with `cml_build_guestos init guest-bookworm --pki ~/test-certs/`
-3. Create a new folder `rootfs-builder`
-4. Create a new rootfs for Debian 12 Bookworm `sudo debootstrap bookworm rootfs-builder http://deb.debian.org/debian/`
-5. Create an uncompressed tarball with `sudo tar -cf guest-bookworm.tar -C ./rootfs-builder .`
-6. Move the tarball into `cmld_guestos/rootfs` with `mv guest-bookworm.tar  rootfs/guest-bookwormos.tar`
-7. Build the guest os with `sudo cml_build_guestos build guest-bookworm`
-8. I don't know `sudo cp -r out/gyroidos-guests/* /var/lib/cml/operatingsystems`
-9. Restart `cmld` service
-10. Verify that `cml-control list_guestos` contains `guest-bookworm`
-11. Create container with `cml-control create conf/guest-bookwormcontainer.conf`
-12. Add `signed_configs: false` to `/etc/cml/device.conf`
-13. Change container password `cml-control change_pin "guest-bookwormcontainer"`. Default password is "trustme"
-14. Restart `cmld` service
-15. Start the container with `cml-control start "guest-bookwormcontainer"`. If command returns `CONTAINER_START_EINTERNAL`, run it again.
-16. Verify that it is running with `    `
-17. In `ps auxf`, look for `/sbin/init` with weird owner
-18. Connect to it using `sudo nsenter -at $PID`
+1. Create a new folder for the guest os
+2. Initalize it with `cml_build_guestos init $GUEST_NAME --pki /path/to/cml/certs`
+3. Create a new rootfs, e.g. using `debootstrap`
+4. Add it to an uncompressed tarball called `${GUEST_NAME}os.tar`
+5. Move it the `rootfs/` directory created in step 2
+6. Build the guest os with `cml_build_guestos build $GUEST_NAME`
+7. Add the guest os to cml by copying the content of `out/` to `/var/lib/cml/operatingsystems`
+8. For this example, append `signed_configs: false` to `/etc/cml/device.conf`
+9. Restart the `cmld` service
+10. Verify that the guestos was detected by running `cml-control list_guestos`, which should contains the new guest os
+11. Create the GyroidOS container with `cml-control create conf/${GUEST_NAME}container.conf`
+12. Change the container's password with `cml-control change_pin "$GUEST_NAME"`. Default password is "trustme"
+13. Start the container with `cml-control start "$GUEST_NAME"`. If command returns `CONTAINER_START_EINTERNAL`, run it again.
+14. Verify that it is running with `cml-control list "$GUEST_NAME"`, which should have `state: RUNNING`
+15. To connect to the container, run `ps auxf`, search for `/user/sbin/cmld`. It should have a child process running `/sbin/init`. Get the PID and connect with `sudo nsenter -at $PID`
 
-<details markdown="0">
-<summary style="display: list-item">GuestOS script</summary>
-
-<pre>
-#!/bin/bash
-
-set -euo pipefail
-
-if [ ! -d ~/test-certs/ ]; then
-    echo "Certificate directory '~/test-certs/' is missing"
-    exit 1
-fi
-
-echo "Creating GuestOS directory"
-mkdir ~/cmld_guestos
-cd ~/cmld_guestos
-
-echo
-echo "Initalizing guest os"
-cml_build_guestos init guest-bookworm --pki ~/test-certs/
-
-echo
-echo "Creating debian 12 rootfs"
-mkdir rootfs-builder
-sudo debootstrap bookworm rootfs-builder http://deb.debian.org/debian/
-
-echo
-echo "Creating tar archive of rootfs"
-sudo tar -cf guest-bookworm.tar -C ./rootfs-builder .
-mv guest-bookworm.tar  rootfs/guest-bookwormos.tar
-
-echo
-echo "Building the guestos"
-sudo cml_build_guestos build guest-bookworm
-
-echo
-echo "Moving guest OS to '/var/lib/cml/operatingsystems'"
-sudo cp -r out/gyroidos-guests/* /var/lib/cml/operatingsystems
-
-echo
-echo "Disabling signed configs for this example"
-echo "signed_configs: false" >> /etc/cml/device.conf
-
-echo
-echo "Restarting cmld service"
-sudo systemctl stop cmld.service
-sudo systemctl start cmld.service
-echo "Verifying that restart was successful"
-systemctl is-active --quiet cmld.service
-
-echo
-echo "Verifying that the guest os was successfully registred"
-cml-control list_guestos | grep -q "guest-bookworm"
-
-echo
-echo "Creating GyroidOS container"
-cml-control create conf/guest-bookwormcontainer.conf
-
-echo
-echo "Updating container password to be empty"
-printf "trustme\n\n\n" | cml-control change_pin "guest-bookwormcontainer"
-
-echo
-echo "Starting the container"
-while true
-do
-    if $(printf "\n" | cml-control start "guest-bookwormcontainer" | grep -q "CONTAINER_START_OK"); then
-        echo "Container started successfully"
-        break
-    fi
-    
-    echo "Container did not start successfully. Waiting for 2 seconds before retrying"
-    sleep 2
-done
-
-echo
-echo "Waiting for the container to be ready"
-while true
-do
-    if $(cml-control list "guest-bookwormcontainer" | grep -q "state: RUNNING"); then
-        echo "Container is running"
-        break
-    else if $(cml-control list "guest-bookwormcontainer" | grep -q "state: STOPPED"); then
-        echo "Container has stopped. Some error has occurred."
-        exit 1
-    fi
-    
-    echo "Container is not yet running. Waiting for 2 seconds before retrying"
-    sleep 2
-done
-
-echo
-echo "Determening container's PID"
-CONTAINER_PID=$(ps auxf | grep -A 10 "[/]usr/sbin/cmld" | grep /sbin/init | awk '{print $2}')
-
-echo "To connect to the container run:"
-echo "sudo nsenter -at $CONTAINER_PID"
-</pre>
-</details>
-
-## Old
-2. Install your guestos as described in [GuestOS configuration](/operate/guestos_config)
-6. You can now use control as described in [Basic Operation](/operate/control)
+For more details, see the [GuestOS configuration](/operate/guestos_config) and the [Basic Operation](/operate/control) documentation pages.

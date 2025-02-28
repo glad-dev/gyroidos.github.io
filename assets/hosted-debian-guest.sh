@@ -90,7 +90,7 @@ while true; do
         break
     fi
     
-    echo "Container is not yet running: $STATE. Waiting for 2 seconds before retrying"
+    echo "Container has not been started: $STATE. Waiting for 2 seconds before retrying"
     sleep 2
 done
 
@@ -106,8 +106,8 @@ while true; do
         echo "Container has stopped. An error has occurred."
         exit 1
     else
-        echo "Container is not yet running: $STATE. Waiting for 2 seconds before retrying"
-        sleep 2
+        echo "Container is not yet running: $STATE. Waiting for 5 seconds before retrying"
+        sleep 5
     fi
 done
 

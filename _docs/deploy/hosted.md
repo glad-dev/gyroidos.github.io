@@ -75,8 +75,15 @@ sudo make install
 
 set -euo pipefail
 
-echo "Initalizing tokens"
-sudo cml-scd
+echo "Creating log directory"
+sudo mkdir -p /var/log/cml/cml-scd
+
+if [ -d "/var/lib/cml/tokens/" ] && [ ! -z "$(ls -A '/var/lib/cml/tokens/')" ]; then
+    echo "Using existing tokens"
+else
+    echo "Initalizing tokens"
+    sudo cml-scd
+fi
 
 # Check if cml-control group already exists
 GROUP_NAME="cml-control"
@@ -87,10 +94,14 @@ else
     sudo addgroup cml-control
 fi
 
-echo "Adding current user to group"
-sudo usermod -aG cml-control $(whoami)
-echo "Reloading groups"
-newgrp "$GROUP_NAME"
+if $(id | grep -q "$GROUP_NAME"); then
+    echo "User is already in the '$GROUP_NAME' group"
+else
+    echo "Adding current user to group"
+    sudo usermod -aG cml-control $(whoami)
+    echo "Reloading groups"
+    (newgrp "$GROUP_NAME")
+fi
 
 # Calling `cml_gen_dev_certs` on an existing directory does not create any certificates
 if [ -d ~/test-certs ]; then
@@ -111,7 +122,15 @@ echo "Starting cmld.service"
 sudo systemctl start cmld.service
 
 echo
-echo "Use 'systemctl status cmld.service' to verify that the service is active."
+echo "Waiting for the service to start"
+sleep 2
+if $(systemctl is-active --quiet cmld.service); then
+    echo "Starting the service was successful."
+    echo "You're good to go"
+else
+    echo "Starting the service failed"
+    echo "Run 'systemctl status cmld.service' for more information"
+fi
 </pre>
 </details>
 

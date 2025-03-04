@@ -83,7 +83,7 @@ Download and run the [guest setup script](/assets/hosted-debian-guest.sh), which
 ### Manual
 
 1. Create a folder for the Guest OS
-2. Initialize the folder and generate a basic configuration with `cml_build_guestos init $GUEST_NAME --pki /path/to/cml/certs`
+2. Initialize the folder and generate a basic configuration with `cml_build_guestos init $GUEST_NAME --pki /path/to/dir`
 3. Create a new rootfs using, e.g. `debootstrap`
 4. Add the rootfs to an uncompressed tarball named `${GUEST_NAME}os.tar`
 5. Move the tar ball into the `rootfs/` directory that was created in step 2

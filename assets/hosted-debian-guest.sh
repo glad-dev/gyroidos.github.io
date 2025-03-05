@@ -32,6 +32,10 @@ print "Creating Debian 12 rootfs"
 mkdir "${ROOTFS_DIR}"
 sudo debootstrap bookworm "${ROOTFS_DIR}" "http://deb.debian.org/debian"
 
+# Setting a nameserver
+echo "Setting up a name server"
+echo "nameserver 1.1.1.1" | sudo tee "${ROOTFS_DIR}/etc/resolv.conf" > /dev/null
+
 # Create tar archive of rootfs
 print "Creating tar archive of rootfs"
 sudo tar -cf "${GUEST_NAME}.tar" -C "${ROOTFS_DIR}" .
